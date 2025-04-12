@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% if result_source == "similar" %}Podobne do: {{ searched_movie }}
+        {% elif result_source == "recommendations" %}Rekomendacje dla: {{ searched_movie }}
+        {% else %}Wyniki dla: {{ searched_movie }}{% endif %}
+    </title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="stars-background"></div>
+
+    <div class="results-container">
+        <h1>
+            {% if result_source == "similar" %}
+                Podobne do: "{{ searched_movie }}"
+            {% elif result_source == "recommendations" %}
+                Rekomendacje dla: "{{ searched_movie }}"
+            {% else %}
+                Wyniki wyszukiwania dla: "{{ searched_movie }}"
+            {% endif %}
+        </h1>
+
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+
+        {% if results %}
+            {% for item in results %}
+                <div class="movie-card">
+                    <div class="movie-poster">
+                        {% if item.poster_url %}
+                            <img src="{{ item.poster_url }}" alt="Plakat: {{ item.title }}">
+                        {% else %}
+                            <div class="no-poster">Brak<br>plakatu</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="movie-info">
+                        <h2>{{ item.title }}</h2>
+                        <div class="rating">{{ "%.1f"|format(item.rating) if item.rating else 'N/A' }}</div>
+
+                        <p class="movie-meta">
+                            {{ item.release_year if item.release_year else 'Brak daty' }}
+                            {# --- DODANO ZNACZNIK Film/Serial --- #}
+                            {% if category == 'both' %}
+                                <span class="media-type">
+                                    ({{ 'Film' if item.media_type == 'movie' else 'Serial' }})
+                                </span>
+                            {% endif %}
+                            {# --- KONIEC ZNACZNIKA --- #}
+                            | {{ item.genres|join(', ') if item.genres else 'Brak gatunku' }}
+                        </p>
+
+                        <p class="movie-description">
+                            {{ item.overview if item.overview else 'Brak opisu.' }}
+                        </p>
+
+                        {% if item.actors %}
+                        <p class="movie-credits"><strong>Obsada:</strong> {{ item.actors|join(', ') }}</p>
+                        {% endif %}
+
+                        {% if item.watch_providers %}
+                        <p class="movie-providers">
+                            <strong>Gdzie obejrzeć (PL):</strong>
+                            {% for provider in item.watch_providers %}
+                                <span>{{ provider }}</span>
+                            {% endfor %}
+                        </p>
+                        {% endif %}
+
+                         <div class="movie-votes">
+                           {{ "{:,.0f}".format(item.vote_count).replace(',', ' ') if item.vote_count else '0' }} głosów
+                        </div>
+
+                        {% if item.trailer_url %}
+                            <a href="{{ item.trailer_url }}" target="_blank" class="trailer-link">Obejrzyj zwiastun</a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% elif not error %}
+            <p class="no-results">Nie znaleziono pasujących filmów ani seriali.</p>
+        {% endif %}
+
+        <a href="{{ url_for('index') }}" class="back-button">Wyszukaj ponownie</a>
+    </div>
+
+    <!-- <script src="{{ url_for('static', filename='stars.js') }}"></script> -->
+</body>
+</html>
